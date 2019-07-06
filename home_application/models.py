@@ -4,12 +4,15 @@ from django.db import models
 
 
 class Host(models.Model):
-    name = models.CharField(max_length=30,null=True)
-    age = models.CharField(max_length=30,null=True)
-    text = models.TextField(null=True)
-    when_created = models.CharField(max_length=50,null=True)
+    ip = models.CharField(max_length=30,null=True)
+    biz = models.IntegerField(null=True)
+    bk_cloud_id = models.IntegerField(null=True)
+    need_poll = models.BooleanField(default=False)
 
 
 class Server(models.Model):
     host = models.ForeignKey(Host)
-    background_img = models.BinaryField(null=True)
+    mem = models.CharField(max_length=30, null=True)
+    disk = models.CharField(max_length=30, null=True)
+    cpu = models.CharField(max_length=30, null=True)
+    date_time = models.CharField(max_length=120, null=True)

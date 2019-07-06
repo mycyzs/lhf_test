@@ -12,6 +12,8 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 
 from common.log import logger
+from home_application.cmdb_script import install_mysql_by_script
+from home_application.models import Host, Server
 
 
 @task()
@@ -51,3 +53,33 @@ def get_time():
     execute_task()
     now = datetime.datetime.now()
     logger.error(u"celery 周期任务调用成功，当前时间：{}".format(now))
+
+
+@periodic_task(run_every=crontab(minute='*/2', hour='*', day_of_week="*"))
+def get_host_data():
+    try:
+        hosts = Host.objects.filter(need_poll=True)
+        for host in hosts:
+            username = 'admin'
+            app_id = host.biz
+            app_list = [{'ip': host.ip, 'bk_cloud_id': host.bk_cloud_id}]
+            script_content = """
+                    #!/bin/bash
+                    MEMORY=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
+                    DISK=$(df -h | awk '$NF=="/"{printf "%s", $5}')
+                    CPU=$(top -bn1 | grep load | awk '{printf "%.2f%%", $(NF-2)}')
+                    DATE=$(date "+%Y-%m-%d %H:%M:%S")
+                    echo -e "$DATE|$MEMORY|$DISK|$CPU" 
+                    """
+            result = install_mysql_by_script(username, app_id, app_list, script_content)
+            if result['result']:
+                data = result['data'][0]['log_content']
+
+                date_time = data.split("|")[0],
+                mem = data.split("|")[1],
+                disk = data.split("|")[2],
+                cpu = data.split("|")[3],
+
+                Server.objects.create(host=host, mem=mem,disk=disk, cpu=cpu, date_time=date_time)
+    except Exception as e:
+        print e

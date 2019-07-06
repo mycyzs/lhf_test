@@ -1,10 +1,8 @@
 controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "sysService", "errorModal", "msgModal", function ($scope, loading, $modal, confirmModal, sysService, errorModal, msgModal) {
 
     $scope.args = {
-        sys_name: "",
-        sys_code: "",
-        owner: "",
-        selected_id: ""
+        biz_id: 2,
+        ip:''
     };
 
     //内容显示页数和数量
@@ -16,22 +14,34 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         pageSize: "10",
         currentPage: 1
     };
-    $scope.template = [{id:1,text:"aaa"},{id:2,text:"bbb"}];
-
-    $scope.templateOption = {
-        data: "template",
-        multiple: false,
-    };
 
 
+
+    $scope.userList = []
     $scope.inits = function () {
         loading.open();
         sysService.search_init({}, $scope.args, function (res) {
             loading.close();
-
+            $scope.userList = res.data
         })
     };
     $scope.inits();
+
+    $scope.templateOption = {
+        data: "userList",
+        multiple: false,
+    };
+
+
+
+
+
+    $scope.select_biz = function(){
+        $scope.search_sys_info();
+    }
+
+
+
     $scope.setPagingData = function (data, pageSize, page) {
         $scope.PagingData = data.slice((page - 1) * pageSize, page * pageSize);
         $scope.totalSerItems = data.length;
@@ -103,20 +113,92 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
 
     $scope.delete_sys = function (row) {
         //根据id删除系统
-        var id = row.entity.id;
+        $scope.args.need_ip = row.entity.bk_host_innerip;
+        $scope.args.bk_cloud_id = row.entity.bk_cloud_id;
+        $scope.args.host_id = row.entity.id;
+        $scope.args.bk_os_name = row.entity.bk_os_name;
+        $scope.args.bk_host_name = row.entity.bk_host_name;
+        $scope.args.area = row.entity.area;
+        $scope.args.aaa = row.entity.aaa;
         confirmModal.open({
-            text: "确定删除该系统吗？",
+            text: "是否查询系统资源使用情况？",
             confirmClick: function () {
                 loading.open();
-                sysService.delete_sys({id: id}, {}, function (res) {
+                sysService.delete_sys({}, $scope.args, function (res) {
                     loading.close();
                     if (res.result) {
-                        $scope.hostList.splice(row.rowIndex, 1);
-                        msgModal.open("success", "删除系统成功！");
+                        //$scope.hostList.splice(row.rowIndex,1)
+                        msgModal.open("success", "查询成功")
+                        $scope.hostList[row.rowIndex] = res.data
                         $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
                     }
                     else {
                         errorModal.open(res.message);
+                    }
+                })
+            }
+        });
+
+    };
+
+
+    $scope.need_poll = function (row) {
+        //根据id删除系统
+        $scope.args.need_ip = row.entity.bk_host_innerip;
+        $scope.args.bk_cloud_id = row.entity.bk_cloud_id;
+        $scope.args.host_id = row.entity.id;
+        $scope.args.bk_os_name = row.entity.bk_os_name;
+        $scope.args.bk_host_name = row.entity.bk_host_name;
+        $scope.args.area = row.entity.area;
+        $scope.args.aaa = row.entity.aaa;
+        $scope.args.Mem = row.entity.Mem;
+        $scope.args.Disk = row.entity.Disk;
+        $scope.args.CPU = row.entity.CPU;
+        confirmModal.open({
+            text: "是否加入周期？",
+            confirmClick: function () {
+                loading.open();
+                sysService.need_poll({}, $scope.args, function (res) {
+                    loading.close();
+                    if (res.result) {
+                        $scope.hostList[row.rowIndex] = res.data
+                        msgModal.open("success", "加入周期成功")
+                        $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
+                    }
+                    else {
+                        msgModal.open("error", "主机已经加入周期")
+                    }
+                })
+            }
+        });
+
+    };
+
+    $scope.delete_poll = function (row) {
+        //根据id删除系统
+        $scope.args.need_ip = row.entity.bk_host_innerip;
+        $scope.args.bk_cloud_id = row.entity.bk_cloud_id;
+        $scope.args.host_id = row.entity.id;
+        $scope.args.bk_os_name = row.entity.bk_os_name;
+        $scope.args.bk_host_name = row.entity.bk_host_name;
+        $scope.args.area = row.entity.area;
+        $scope.args.aaa = row.entity.aaa;
+        $scope.args.Mem = row.entity.Mem;
+        $scope.args.Disk = row.entity.Disk;
+        $scope.args.CPU = row.entity.CPU;
+        confirmModal.open({
+            text: "是否加入周期？",
+            confirmClick: function () {
+                loading.open();
+                sysService.delete_poll({}, $scope.args, function (res) {
+                    loading.close();
+                    if (res.result) {
+                        $scope.hostList[row.rowIndex] = res.data
+                        msgModal.open("success", "加入周期成功")
+                        $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
+                    }
+                    else {
+                        msgModal.open("error", "主机已经加入周期")
                     }
                 })
             }
@@ -187,18 +269,19 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         pagingOptions: $scope.pagingOptions,
         totalServerItems: 'totalSerItems',
         columnDefs: [
-            {field: "sys_name", displayName: "系统名", width: 160},
-            {field: "sys_code", displayName: "系统简称", width: 140},
-            {field: "owners", displayName: "负责人", width: 180},
-            {field: "is_control", displayName: "是否权限控制", width: 160},
-            {field: "department", displayName: "所属产品线", width: 160},
-            {field: "comment", displayName: "备注", width: 180},
+            {field: "bk_host_innerip", displayName: "内网ip", width: 160},
+            {field: "bk_os_name", displayName: "系统名", width: 140},
+            {field: "bk_host_name", displayName: "主机名", width: 180},
+            {field: "Mem", displayName: "Mem(%)", width: 160},
+            {field: "Disk", displayName: "Disk(%)", width: 160},
+            {field: "CPU", displayName: "CPU(%)", width: 180},
             {
                 displayName: "操作",
                 cellTemplate: '<div style="width:100%;padding-top:5px;text-align: center">' +
-                '<span style="cursor: pointer" class="btn btn-xs btn-primary" ng-click="modify_sys(row)">修改</span>&emsp;' +
-                '<span style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_sys(row)">删除</span>' +
-                '<span style="cursor: pointer" class="btn btn-xs btn-danger" ui-sref="my_test({id:row.entity.id})">跳转</span>' +
+
+                '<span style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_sys(row)">查询</span>' +
+                '<span ng-if="row.entity.aaa == \'false\'" style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="need_poll(row)">周期</span>' +
+                '<span ng-if="row.entity.aaa == \'true\'" style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_poll(row)">移除</span>' +
                 '</div>'
             }
         ]

@@ -6,7 +6,7 @@ urlpatterns = patterns(
     'home_application.views',
     (r'^$', 'home'),
     (r'^api/test$', 'test'),
-    (r'^search_sys_info$', 'search_sys_info'),
+    (r'^search_sys_info$', 'select_search_host'),
     (r'^add_sys$', 'add_sys'),
     (r'^modify_sys$', 'modify_sys'),
     (r'^delete_sys$', 'delete_sys'),
@@ -14,6 +14,10 @@ urlpatterns = patterns(
     (r'^get_count_obj$', 'get_count_obj'),  # 圆饼图
     (r'^get_count$', 'get_count'),   # 折线图
     (r'^get_count_zhu$', 'get_count_zhu'),  # 柱状图
+    (r'^need_poll$', 'need_poll'),  # 柱状图
+    (r'^search_my_host$', 'search_my_host'),  # 柱状图
+   # (r'^search_host_detail$', 'search_host_detail'),  # 柱状图
+    (r'^delete_poll$', 'delete_poll'),  # 柱状图
 
 
 

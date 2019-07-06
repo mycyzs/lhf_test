@@ -105,7 +105,7 @@ class CollectionsJOB(object):
         )
         self.get_task_ip_log = ComponentAPI(
             client=self.client, method='GET',
-            path='/api/c/compapi{bk_api_ver}/job/get_task_ip_log/',
+            path='/api/c/compapi{bk_api_ver}/job/get_job_instance_log/',
             description=u'根据作业实例ID查询作业执行日志'
         )
         self.get_task_result = ComponentAPI(

@@ -23,6 +23,10 @@ services.factory('sysService', ['$resource', function ($resource) {
             up_csv: {method: POST, params: {actionName: 'up_csv'}, isArray: false},
             search_topo: {method: POST, params: {actionName: 'search_topo'}, isArray: false},
             search_host_by_node: {method: POST, params: {actionName: 'search_host_by_node'}, isArray: false},
+            need_poll: {method: POST, params: {actionName: 'need_poll'}, isArray: false},
+            search_my_host: {method: POST, params: {actionName: 'search_my_host'}, isArray: false},
+            search_host_detail: {method: POST, params: {actionName: 'search_host_detail'}, isArray: false},
+            delete_poll: {method: POST, params: {actionName: 'delete_poll'}, isArray: false},
         });
 }])
 

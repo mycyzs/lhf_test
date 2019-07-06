@@ -10,6 +10,9 @@ from conf.default import APP_ID, APP_TOKEN
 
 
 # 获取平台所有模型
+from home_application.models import Server, Host
+
+
 def search_init(request):
     try:
         client = get_client_by_user(request.user.username)
@@ -121,6 +124,7 @@ def search_buseness(request):
 # 查询业务下的所有主机
 def search_app_host(request):
     try:
+
         client = get_client_by_user(request.user.username)
         kwargs = {
             "bk_app_code": APP_ID,
@@ -166,16 +170,15 @@ def search_app_host(request):
 def select_search_host(request):
     try:
         requst_data = json.loads(request.body)
-        select_value = requst_data['select_value']
-        if requst_data['select_o'] == 'operator':
-            select_value = [requst_data['select_value']]
+        biz = int(requst_data['biz_id'])
+        ip = requst_data['ip']
         client = get_client_by_user(request.user.username)
         kwargs = {
             "bk_app_code": APP_ID,
             "bk_app_secret": APP_TOKEN,
             "bk_username": 'admin',
-            "ip" : {"flag": "bk_host_innerip|bk_host_outerip","exact": 1,"data": []},
-            'bk_biz_id': int(requst_data['biz']),
+            "ip" : {"flag": "bk_host_innerip|bk_host_outerip","exact": 1,"data": ip.split('\n') if ip else []},
+            'bk_biz_id': biz,
             "condition": [
             {
                 "bk_obj_id": "biz",
@@ -186,7 +189,7 @@ def select_search_host(request):
             {
                 "bk_obj_id": "host",
                 "fields": [],
-                "condition": [{"field": requst_data['select_o'],"operator": "$regex","value": select_value}]
+                "condition": []
             },
 
             {
@@ -205,12 +208,23 @@ def select_search_host(request):
         host_list = []
         if result["result"]:
             for i in result['data']['info']:
+                dh = 'false'
+                if Host.objects.filter(ip=i['host']['bk_host_innerip']).exists():
+                    dh = 'true'
+
                 host_list.append({
                     'id':i['host']['bk_host_id'],
                     'bk_host_innerip':i['host']['bk_host_innerip'],
+                    'bk_os_name':i['host']['bk_os_name'],
+                    'bk_host_name':i['host']['bk_host_name'],
                     'area': i['host']['bk_cloud_id'][0]['bk_inst_name'],
-                    'module': [j['bk_module_name'] for j in i['module']][0] if [j['bk_module_name'] for j in i['module']] else '',
-                    'agent_status': ''
+                    'Mem': '',
+                    'Disk': '',
+                    'CPU': '',
+                    'bk_cloud_id': i['host']['bk_cloud_id'][0]['bk_inst_id'],
+
+                    'aaa': dh,
+
                 })
         return render_json({"result": True, "data": host_list})
     except Exception as e:
@@ -355,22 +369,40 @@ def get_count_obj(request):
 
 # 折线图
 def get_count(request):
-    date_now = datetime.datetime.now() + datetime.timedelta(hours=-1)
-    time_now = datetime.datetime.now()
-    when_created__gt = str(date_now).split(".")[0]
-    time_n = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-
-    # 存的时候
-    # when_created = str(datetime.datetime.now()).split(".")[0]
-    # 数据库读取的时候
+    # date_now = datetime.datetime.now() + datetime.timedelta(hours=-1)
+    # time_now = datetime.datetime.now()
     # when_created__gt = str(date_now).split(".")[0]
+    # time_n = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    #
+    #
+    # # 存的时候
+    # # when_created = str(datetime.datetime.now()).split(".")[0]
+    # # 数据库读取的时候
+    # # when_created__gt = str(date_now).split(".")[0]
 
+    requst_data = json.loads(request.body)
+    host_id = requst_data['host_ip']
+    SER = Server.objects.filter(host_id=host_id)
+    CAT = []
+    MEM = []
+    DISK = []
+    CPU = []
+    for s in SER:
+        dk = eval(s.date_time)
+        aa = eval(s.mem)
+        bb = eval(s.disk)
+        cc = eval(s.cpu)
+        CAT.append(dk[0])
+        dd = float(aa[0].split("%")[0])
+        MEM.append(dd)
+        DISK.append(float(bb[0].split("%")[0]))
+        CPU.append(float(cc[0].split("%")[0]))
     install_list = [
-        {"name": u"本月MySQL新增数", "data": [3,6,8,9]},
-        {"name": u"本月Oracle新增数", "data": [1,4,7,10]}
+        {"name": u"mem", "data": MEM},
+        {"name": u"disk", "data": DISK},
+        {"name": u"cpu", "data": CPU}
     ]
-    return render_json({'result':True,'data':install_list,'cat':['1','2','3','4']})
+    return render_json({'result':True,'data':install_list,'cat':CAT})
 
 
 

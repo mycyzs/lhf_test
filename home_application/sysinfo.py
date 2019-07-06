@@ -16,6 +16,7 @@ from blueking.component.shortcuts import get_client_by_request
 from common.log import logger
 from common.mymako import render_json
 from conf.default import STATIC_URL, PROJECT_ROOT
+from home_application.cmdb_script import install_mysql_by_script
 from home_application.models import Host
 
 
@@ -90,13 +91,116 @@ def delete_sys(request):
     try:
         request_data = json.loads(request.body)
         username = request.user.username
+        ip = request_data['need_ip']
+        app_id = int(request_data['biz_id'])
+        bk_cloud_id = request_data['bk_cloud_id']
+        app_list = [{'ip': ip, 'bk_cloud_id': bk_cloud_id}]
+        script_content = """
+        #!/bin/bash
+        MEMORY=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
+        DISK=$(df -h | awk '$NF=="/"{printf "%s", $5}')
+        CPU=$(top -bn1 | grep load | awk '{printf "%.2f%%", $(NF-2)}')
+        DATE=$(date "+%Y-%m-%d %H:%M:%S")
+        echo -e "$DATE|$MEMORY|$DISK|$CPU" 
+        """
 
-        return render_json({"result": True, "data": {}})
+        result = install_mysql_by_script(username, app_id, app_list, script_content)
+        host_data = {}
+        if result['result']:
+            data = result['data'][0]['log_content']
+            date_t = data.split("|")[0]
+            mem = data.split("|")[1]
+            disk = data.split("|")[2]
+            cpu = data.split("|")[3]
+            host_data = {
+                'id': request_data['host_id'],
+                'bk_host_innerip': request_data['need_ip'],
+                'bk_os_name': request_data['bk_os_name'],
+                'bk_host_name': request_data['bk_host_name'],
+                'area': request_data['area'],
+                'Mem': mem,
+                'Disk': disk,
+                'CPU': cpu,
+                'bk_cloud_id': bk_cloud_id,
+                'aaa': 'false',
+            }
+        return render_json({"result": True, "data": host_data})
     except Exception as e:
         logger.error(e)
         return render_json({"result": False, "msg": [u"添加信息失败!!"]})
 
 
+def need_poll(request):
+    try:
+        request_data = json.loads(request.body)
+
+        if Host.objects.filter(ip=request_data['need_ip']).exists():
+            return render_json({'result': False})
+        data = {
+            'ip': request_data['need_ip'],
+            'biz': request_data['biz_id'],
+            'bk_cloud_id': request_data['bk_cloud_id'],
+            'need_poll': True,
+        }
+
+        Host.objects.create(**data)
+
+        datsd = {
+            'id': request_data['host_id'],
+            'bk_host_innerip': request_data['need_ip'],
+            'bk_os_name': request_data['bk_os_name'],
+            'bk_host_name': request_data['bk_host_name'],
+            'area': request_data['area'],
+            'Mem': request_data['Mem'],
+            'Disk': request_data['Disk'],
+            'CPU': request_data['CPU'],
+            'bk_cloud_id': request_data['bk_cloud_id'],
+            'aaa': 'true',
+        }
+        return render_json({'result': True, 'data':datsd})
+
+    except Exception as e:
+        print e
+
+
+def delete_poll(request):
+    try:
+        request_data = json.loads(request.body)
+
+        Host.objects.filter(ip=request_data['need_ip']).delete()
+
+
+        datsd = {
+            'id': request_data['host_id'],
+            'bk_host_innerip': request_data['need_ip'],
+            'bk_os_name': request_data['bk_os_name'],
+            'bk_host_name': request_data['bk_host_name'],
+            'area': request_data['area'],
+            'Mem': request_data['Mem'],
+            'Disk': request_data['Disk'],
+            'CPU': request_data['CPU'],
+            'bk_cloud_id': request_data['bk_cloud_id'],
+            'aaa': 'false',
+        }
+        return render_json({'result': True, 'data': datsd})
+
+    except Exception as e:
+        print e
+
+
+def search_my_host(request):
+    try:
+        hosts = Host.objects.all()
+        data = []
+        for h in hosts:
+            data.append({
+                'id': h.id,
+                'text':h.ip
+            })
+        return render_json({'result': True, 'data':data})
+
+    except Exception as e:
+        print e
 
 
 
