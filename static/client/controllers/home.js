@@ -187,18 +187,18 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         $scope.args.Disk = row.entity.Disk;
         $scope.args.CPU = row.entity.CPU;
         confirmModal.open({
-            text: "是否加入周期？",
+            text: "是否移除主机？",
             confirmClick: function () {
                 loading.open();
                 sysService.delete_poll({}, $scope.args, function (res) {
                     loading.close();
                     if (res.result) {
                         $scope.hostList[row.rowIndex] = res.data
-                        msgModal.open("success", "加入周期成功")
+                        msgModal.open("success", "主机移除成功")
                         $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
                     }
                     else {
-                        msgModal.open("error", "主机已经加入周期")
+                        msgModal.open("error", "主机移除失败")
                     }
                 })
             }

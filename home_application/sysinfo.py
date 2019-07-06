@@ -112,6 +112,9 @@ def delete_sys(request):
             mem = data.split("|")[1]
             disk = data.split("|")[2]
             cpu = data.split("|")[3]
+            ss = 'false'
+            if Host.objects.filter(ip=request_data['need_ip']).exists():
+                ss = 'true'
             host_data = {
                 'id': request_data['host_id'],
                 'bk_host_innerip': request_data['need_ip'],
@@ -122,7 +125,7 @@ def delete_sys(request):
                 'Disk': disk,
                 'CPU': cpu,
                 'bk_cloud_id': bk_cloud_id,
-                'aaa': 'false',
+                'aaa': ss,
             }
         return render_json({"result": True, "data": host_data})
     except Exception as e:
