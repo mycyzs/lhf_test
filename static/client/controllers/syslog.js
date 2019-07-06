@@ -24,7 +24,7 @@ controllers.controller("syslog", ["$scope", "loading", "$modal", "confirmModal",
             loading.close();
             if (res.result) {
                 $scope.db_change = res.data;
-                $scope.dbReports.xAxis.categories = res.data.cat;
+                $scope.dbReports.xAxis.categories = res.cat;
 
             }else {
                 errorModal.open(res.message);

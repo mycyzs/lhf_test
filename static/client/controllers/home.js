@@ -280,8 +280,8 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
                 cellTemplate: '<div style="width:100%;padding-top:5px;text-align: center">' +
 
                 '<span style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_sys(row)">查询</span>' +
-                '<span ng-if="row.entity.aaa == \'false\'" style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="need_poll(row)">周期</span>' +
-                '<span ng-if="row.entity.aaa == \'true\'" style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_poll(row)">移除</span>' +
+                '<span ng-if="row.entity.aaa == \'false\'" style="cursor: pointer;margin-left: 10px" class="btn btn-xs btn-danger" ng-click="need_poll(row)">加入周期</span>' +
+                '<span ng-if="row.entity.aaa == \'true\'" style="cursor: pointer;margin-left: 10px" class="btn btn-xs btn-danger" ng-click="delete_poll(row)">移除主机</span>' +
                 '</div>'
             }
         ]
